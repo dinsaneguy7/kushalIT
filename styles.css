@@ -616,3 +616,61 @@ section {
     background: var(--grid-line);
     z-index: -1;
 }
+
+/* Mobile/Tablet: click-to-show preview behavior
+   - use `.hover-reveal.visible` to show on touch devices
+   - auto-hide is controlled via JS (500ms)
+*/
+.hover-reveal.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translate(-50%, -50%);
+}
+
+/* Smaller, centered preview for tablets/phones */
+@media (max-width: 1024px) {
+    .hover-reveal {
+        left: 50%;
+        right: auto;
+        top: 40%;
+        transform: translate(-50%, -50%);
+        max-width: 60vw;
+        max-height: 34vh;
+        width: 60vw;
+        height: 34vh;
+        border-radius: 8px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+        background: rgba(0,0,0,0.45);
+    }
+}
+
+/* On touch devices reduce transition to feel snappier */
+@media (hover: none) {
+    /* Smooth hide transition on touch devices (0.7s ease) */
+    .hover-reveal { transition: opacity 0.7s ease, transform 0.7s ease; }
+}
+
+/* Caption inside the reveal */
+.reveal-caption {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 8px);
+    bottom: 8px;
+    padding: 0.45rem 0.75rem;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    white-space: nowrap;
+}
+.reveal-caption.show {
+    opacity: 1;
+    transform: translate(-50%, 0px);
+}
+
+/* Slight image scale down for mobile preview */
+.hover-reveal img { object-fit: cover; width: 100%; height: 100%; }

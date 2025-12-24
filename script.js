@@ -108,7 +108,9 @@ const revealContainer = document.getElementById('hover-reveal');
 const revealImg = document.getElementById('reveal-img');
 
 serviceRows.forEach(row => {
+    // Desktop hover only: skip on touch/tablet viewports
     row.addEventListener('mouseenter', () => {
+        if (window.matchMedia('(max-width: 1024px)').matches) return;
         const imgUrl = row.getAttribute('data-img');
         const serviceTitle = row.querySelector('.service-title').textContent;
         revealImg.src = imgUrl;
@@ -120,6 +122,7 @@ serviceRows.forEach(row => {
     });
 
     row.addEventListener('mousemove', (e) => {
+        if (window.matchMedia('(max-width: 1024px)').matches) return;
         // Position the preview relative to cursor
         const x = e.clientX;
         const y = e.clientY;
@@ -131,6 +134,7 @@ serviceRows.forEach(row => {
     });
 
     row.addEventListener('mouseleave', () => {
+        if (window.matchMedia('(max-width: 1024px)').matches) return;
         revealContainer.classList.remove('active');
         cursorOutline.style.width = '40px';
         cursorOutline.style.height = '40px';
@@ -178,3 +182,66 @@ lenis.on('scroll', (e) => {
     const heroH1 = document.querySelector('.hero h1');
     if(heroH1) heroH1.style.transform = `translateY(${e.scroll * 0.1}px)`;
 });
+
+/* Mobile/Tablet: click-to-show preview for service rows, auto-hide after 500ms */
+(function () {
+    const serviceRowsTouch = document.querySelectorAll('.service-row[data-img]');
+    const revealContainerTouch = document.getElementById('hover-reveal');
+    const revealImgTouch = document.getElementById('reveal-img');
+
+    if (!serviceRowsTouch.length || !revealContainerTouch || !revealImgTouch) return;
+
+    function isTouchViewport() {
+        return window.matchMedia('(max-width: 1024px)').matches;
+    }
+
+    function showTempImage(src, alt) {
+        if (!src) return;
+        revealImgTouch.src = src;
+        if (alt) revealImgTouch.alt = alt;
+        // ensure any hover-driven class is removed and use visible for touch
+        revealContainerTouch.classList.remove('active');
+        revealContainerTouch.classList.add('visible');
+
+        // show caption if available
+        const captionEl = document.getElementById('reveal-caption');
+        if (captionEl) {
+            captionEl.textContent = alt || '';
+            captionEl.classList.add('show');
+        }
+
+        if (revealContainerTouch._hideTimeout) clearTimeout(revealContainerTouch._hideTimeout);
+        // hide after 0.7s for a snappy ease timeout
+        revealContainerTouch._hideTimeout = setTimeout(() => {
+            revealContainerTouch.classList.remove('visible');
+            // ensure active is also cleared in case of race
+            revealContainerTouch.classList.remove('active');
+            if (captionEl) captionEl.classList.remove('show');
+            // revealImgTouch.src = ''; // optional cleanup
+        }, 700);
+    }
+
+    serviceRowsTouch.forEach(row => {
+        row.addEventListener('click', (e) => {
+            if (!isTouchViewport()) return;
+            const src = row.getAttribute('data-img');
+            const titleEl = row.querySelector('.service-title');
+            const alt = titleEl ? (titleEl.textContent.trim() + ' preview') : 'Service preview';
+            showTempImage(src, alt);
+        });
+
+        row.addEventListener('touchstart', (e) => {
+            if (!isTouchViewport()) return;
+            e.stopPropagation();
+        }, {passive: true});
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!isTouchViewport()) return;
+        if (!revealContainerTouch.classList.contains('visible')) return;
+        if (!e.target.closest('.service-row') && !e.target.closest('#hover-reveal')) {
+            if (revealContainerTouch._hideTimeout) clearTimeout(revealContainerTouch._hideTimeout);
+            revealContainerTouch.classList.remove('visible');
+        }
+    });
+})();
